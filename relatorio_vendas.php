@@ -127,9 +127,17 @@ if (isset($_POST['gerar_word'])) {
             font-size: 20px; /* Aumentar o tamanho das células da tabela */
             color: red; /* Cor vermelha para as células */
         }
+
+        .logo {
+            max-width: 200px; /* Largura máxima do logo */
+            margin-bottom: 20px; /* Espaço abaixo do logo */
+        }
     </style>
 </head>
 <body>
+<div class="text-center mb-4">
+            <img src="logo.png" alt="Logo" style="max-width: 200px;"> <!-- Ajuste o tamanho conforme necessário -->
+        </div>
     <div class="container mt-5">
         <h2>Relatório de Vendas por Setor</h2>
         <p class="date-time">Data: <?php echo date('d/m/Y H:i:s'); ?></p> <!-- Exibir data e hora -->

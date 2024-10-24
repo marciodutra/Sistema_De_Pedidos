@@ -1,4 +1,16 @@
 <?php
+if (session_status() == PHP_SESSION_NONE) {
+    session_start(); // Inicia a sessão apenas se não estiver ativa
+}
+
+if (!isset($_SESSION['usuario_id'])) {
+    header("Location: login.php"); // Redireciona para a página de login se não estiver autenticado
+    exit();
+}
+
+// Verifica se o nome do usuário está definido
+$usuario_nome = isset($_SESSION['usuario_nome']) ? $_SESSION['usuario_nome'] : 'Usuário'; // Valor padrão se não definido
+
 // Conexão com o banco de dados
 $host = 'localhost';
 $dbname = 'pedidos_db';
@@ -43,6 +55,13 @@ try {
 } catch (PDOException $e) {
     echo "Erro: " . $e->getMessage();
 }
+
+// Função para deslogar
+if (isset($_POST['logout'])) {
+    session_destroy(); // Destroi a sessão
+    header("Location: login.php"); // Redireciona para a página de login
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -59,11 +78,40 @@ try {
             font-weight: bold; /* Negrito */
             margin-bottom: 20px; /* Margem inferior */
         }
+        .logout-container {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            text-align: right;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 30px; /* Espaçamento abaixo do logo */
+        }
+        .logo-container img {
+            max-width: 150px; /* Ajuste o tamanho máximo do logo */
+        }
     </style>
 </head>
-<body>
+<body>    
+    <!-- Seção do Logo e Nome da Empresa -->
+    <div class="container mt-5">
+        <!-- Seção do Logo -->
+        <div class="text-center mb-4">
+            <img src="logo.png" alt="Logo" style="max-width: 200px;"> <!-- Ajuste o tamanho conforme necessário -->
+        </div>
+    </div>
+
     <div class="container mt-5">
         <h2>Cadastrar Pedido</h2>
+
+        <!-- Exibe o nome do usuário e o botão de logout -->
+        <div class="logout-container">
+            <p><strong>Bem-vindo, <?php echo htmlspecialchars($usuario_nome); ?>!</strong></p>
+            <form action="index.php" method="POST">
+                <button type="submit" name="logout" class="btn btn-danger">Deslogar</button>
+            </form>
+        </div>
 
         <?php if ($mensagemSucesso): ?>
             <div class="mensagem-sucesso"><?php echo $mensagemSucesso; ?></div> <!-- Mensagem de sucesso -->
@@ -98,13 +146,11 @@ try {
                 <input type="number" class="form-control" id="quantidade" name="quantidade" required>
             </div>
             <div class="mb-3">
-                <label for="preco" class="form-label">Preço Unitário</label>
-                <input type="number" step="0.01" class="form-control" id="preco" name="preco" required>
+                <label for="preco" class="form-label">Preço</label>
+                <input type="number" class="form-control" id="preco" name="preco" required>
             </div>
-            <button type="submit" class="btn btn-success">Cadastrar Pedido</button>
+            <button type="submit" class="btn btn-primary">Cadastrar Pedido</button>
         </form>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -113,9 +113,17 @@ if (!empty($searchQuery)) {
             text-align: center; /* Centraliza o texto */
             font-size: 1.5em; /* Aumenta o tamanho da fonte */
         }
+
+        .logo {
+            max-width: 200px; /* Largura máxima do logo */
+            margin-bottom: 20px; /* Espaço abaixo do logo */
+        }
     </style>
 </head>
 <body>
+        <div class="text-center mb-4">
+            <img src="logo.png" alt="Logo" style="max-width: 200px;"> <!-- Ajuste o tamanho conforme necessário -->
+        </div>
     <div class="container mt-5">
         <h2>Visualizar Pedidos</h2>
         
