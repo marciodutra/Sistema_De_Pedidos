@@ -49,17 +49,39 @@ try {
     <title>Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .logo-container {
-            margin-bottom: 30px; /* Espaçamento abaixo do logo */
-            text-align: left; /* Alinhamento à esquerda */
+        /* Centralizar o conteúdo da tela */
+        body, html {
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f8f9fa;
         }
+
+        .container {
+            max-width: 400px; /* Largura máxima para o formulário */
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .logo-container {
+            margin-bottom: 20px;
+        }
+
         .logo-container img {
-            max-width: 150px; /* Ajuste o tamanho máximo do logo */
+            max-width: 150px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
-    <div class="container mt-5">
+    <div class="container">
         <!-- Seção do Logo -->
         <div class="logo-container">
             <img src="logo.png" alt="Logo da Empresa"> <!-- Substitua pelo caminho do seu logo -->
@@ -80,12 +102,12 @@ try {
                 <label for="senha" class="form-label">Senha</label>
                 <input type="password" class="form-control" id="senha" name="senha" required>
             </div>
-            <button type="submit" class="btn btn-primary">Login</button>
+            <button type="submit" class="btn btn-primary w-100">Login</button>
         </form>
 
         <!-- Botão de registro -->
         <div class="mt-3">
-            <a href="register.php" class="btn btn-secondary">Se registrar</a>
+            <a href="register.php" class="btn btn-secondary w-100">Se registrar</a>
         </div>
     </div>
 </body>

@@ -12,67 +12,67 @@ try {
     echo "Erro: " . $e->getMessage();
 }
 
-// Verificar se há pesquisa
-$searchQuery = isset($_POST['search']) ? $_POST['search'] : (isset($_GET['search']) ? $_GET['search'] : '');
-
-// Verificar se o pedido deve ser marcado como pago
-if (isset($_GET['pago_id'])) {
-    $pago_id = $_GET['pago_id'];
-    
-    try {
-        // Atualizar o status do pedido para 'Pago'
-        $update_sql = "UPDATE pedidos SET status = 'Pago' WHERE id = :id";
-        $update_stmt = $conn->prepare($update_sql);
-        $update_stmt->bindParam(':id', $pago_id, PDO::PARAM_INT);
-        
-        if ($update_stmt->execute()) {
-            // Redirecionar para evitar reenvio do formulário e preservar a pesquisa
-            header('Location: visualizar_pedidos.php?search=' . urlencode($searchQuery));
-            exit();
-        } else {
-            echo "Erro ao marcar o pedido como pago.";
-        }
-    } catch (PDOException $e) {
-        echo "Erro ao atualizar o status: " . $e->getMessage();
-    }
-}
-
-// Verificar se o pedido deve ser excluído
-if (isset($_GET['delete_id'])) {
-    $delete_id = $_GET['delete_id'];
-    
-    try {
-        // Excluir o pedido do banco de dados
-        $delete_sql = "DELETE FROM pedidos WHERE id = :id";
-        $delete_stmt = $conn->prepare($delete_sql);
-        $delete_stmt->bindParam(':id', $delete_id, PDO::PARAM_INT);
-        
-        if ($delete_stmt->execute()) {
-            // Redirecionar após a exclusão e preservar a pesquisa
-            header('Location: visualizar_pedidos.php?search=' . urlencode($searchQuery));
-            exit();
-        } else {
-            echo "Erro ao excluir o pedido.";
-        }
-    } catch (PDOException $e) {
-        echo "Erro ao excluir o pedido: " . $e->getMessage();
-    }
-}
-
-// Inicializar pedidos e total
+// Inicializar as variáveis
+$searchQuery = '';
 $pedidos = [];
-$totalPedidosCliente = 0;
+$totalPedidosCliente = 0; // Inicializar total dos pedidos do cliente
+$totalComDesconto = 0; // Inicializar total com desconto
 
 // Verificar se há pesquisa
+if (isset($_POST['search'])) {
+    $searchQuery = $_POST['search'];
+} elseif (isset($_GET['search'])) {
+    $searchQuery = $_GET['search'];
+}
+
+// Marcar um pedido como Pago
+if (isset($_GET['pago_id'])) {
+    $pedidoId = $_GET['pago_id'];
+    try {
+        $stmtPago = $conn->prepare("UPDATE pedidos SET status = 'Pago' WHERE id = :id");
+        $stmtPago->bindValue(':id', $pedidoId, PDO::PARAM_INT);
+        $stmtPago->execute();
+        header("Location: visualizar_pedidos.php?search=" . urlencode($searchQuery));
+        exit();
+    } catch (PDOException $e) {
+        echo "Erro ao marcar como Pago: " . $e->getMessage();
+    }
+}
+
+// Marcar todos os pedidos do cliente como Pago
+if (isset($_POST['mark_all_paid']) && !empty($searchQuery)) {
+    try {
+        $stmtPagoTodos = $conn->prepare("UPDATE pedidos SET status = 'Pago' WHERE nome_cliente LIKE :search");
+        $stmtPagoTodos->bindValue(':search', "%$searchQuery%");
+        $stmtPagoTodos->execute();
+        header("Location: visualizar_pedidos.php?search=" . urlencode($searchQuery));
+        exit();
+    } catch (PDOException $e) {
+        echo "Erro ao marcar todos como Pago: " . $e->getMessage();
+    }
+}
+
+// Aplicar 50% de desconto
+if (isset($_POST['apply_discount']) && !empty($searchQuery)) {
+    try {
+        $stmtTotal = $conn->prepare("SELECT SUM(total) AS total_cliente FROM pedidos WHERE nome_cliente LIKE :search");
+        $stmtTotal->bindValue(':search', "%$searchQuery%");
+        $stmtTotal->execute();
+        $totalPedidosCliente = $stmtTotal->fetch(PDO::FETCH_ASSOC)['total_cliente'];
+        $totalComDesconto = $totalPedidosCliente * 0.5;
+    } catch (PDOException $e) {
+        echo "Erro ao calcular o desconto: " . $e->getMessage();
+    }
+}
+
+// Consultar pedidos
 if (!empty($searchQuery)) {
     try {
-        // Consultar pedidos com filtro pelo nome do cliente
         $stmt = $conn->prepare("SELECT * FROM pedidos WHERE nome_cliente LIKE :search");
         $stmt->bindValue(':search', "%$searchQuery%");
         $stmt->execute();
         $pedidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Calcular o total dos pedidos do cliente
         $stmtTotal = $conn->prepare("SELECT SUM(total) AS total_cliente FROM pedidos WHERE nome_cliente LIKE :search");
         $stmtTotal->bindValue(':search', "%$searchQuery%");
         $stmtTotal->execute();
@@ -81,7 +81,6 @@ if (!empty($searchQuery)) {
         echo "Erro ao buscar pedidos: " . $e->getMessage();
     }
 } else {
-    // Se não houver pesquisa, trazer todos os pedidos
     try {
         $stmt = $conn->query("SELECT * FROM pedidos");
         $pedidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -101,38 +100,35 @@ if (!empty($searchQuery)) {
     <style>
         .total-container {
             display: flex;
-            justify-content: flex-end; /* Alinha o total à direita */
-            margin-top: 20px; /* Adiciona um espaço acima do total */
+            justify-content: center; /* Centraliza o conteúdo */
+            margin-top: 20px;
         }
         .total-alert {
-            background-color: #f8d7da; /* Cor de fundo vermelho clara */
-            color: #721c24; /* Cor do texto em vermelho escuro */
-            padding: 20px; /* Adiciona preenchimento ao redor do texto */
-            border-radius: 5px; /* Cantos arredondados */
-            width: 250px; /* Largura fixa para o total */
-            text-align: center; /* Centraliza o texto */
-            font-size: 1.5em; /* Aumenta o tamanho da fonte */
-        }
-
-        .logo {
-            max-width: 200px; /* Largura máxima do logo */
-            margin-bottom: 20px; /* Espaço abaixo do logo */
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 5px;
+            width: 300px; /* Aumenta a largura */
+            text-align: center;
+            font-size: 2em; /* Aumenta o tamanho da fonte */
+            font-weight: bold; /* Destaca o texto */
         }
     </style>
 </head>
 <body>
-        <div class="text-center mb-4">
-            <img src="logo.png" alt="Logo" style="max-width: 200px;"> <!-- Ajuste o tamanho conforme necessário -->
-        </div>
     <div class="container mt-5">
         <h2>Visualizar Pedidos</h2>
-        
+
         <!-- Formulário de Pesquisa -->
         <form action="visualizar_pedidos.php" method="POST" class="mb-4">
             <div class="input-group">
                 <input type="text" class="form-control" name="search" placeholder="Pesquisar pelo nome do cliente" value="<?php echo htmlspecialchars($searchQuery); ?>">
                 <button class="btn btn-primary" type="submit">Pesquisar</button>
-                <button class="btn btn-danger" type="submit" name="clear_all">Limpar Todos</button> <!-- Botão para limpar todos os pedidos -->
+                <button class="btn btn-danger" type="submit" name="clear_all">Limpar Todos</button>
+                <?php if (!empty($searchQuery)): ?>
+                    <button class="btn btn-success" type="submit" name="mark_all_paid">Marcar Todos como Pago</button>
+                    <button class="btn btn-warning" type="submit" name="apply_discount">Aplicar 50% de Desconto</button>
+                <?php endif; ?>
             </div>
         </form>
 
@@ -173,13 +169,18 @@ if (!empty($searchQuery)) {
                 <?php endforeach; ?>
             </tbody>
         </table>
-        
+
         <!-- Exibir o total de todos os pedidos do cliente pesquisado -->
         <?php if ($totalPedidosCliente > 0): ?>
             <div class="total-container">
-                <div class="total-alert">
+                <div class="total-alert" style="margin-right: 20px;">
                     Total dos Pedidos do Cliente: <?php echo number_format($totalPedidosCliente, 2, ',', '.'); ?>
                 </div>
+                <?php if (isset($totalComDesconto) && $totalComDesconto > 0): ?>
+                    <div class="total-alert">
+                        Total com 50% de Desconto: <?php echo number_format($totalComDesconto, 2, ',', '.'); ?>
+                    </div>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
 
