@@ -1,9 +1,9 @@
 <?php
 // Conexão com o banco de dados
-$host = 'localhost';
-$dbname = 'pedidos_db';
-$username = 'root';
-$password = '051080';
+$host = 'sql106.infinityfree.com';
+$dbname = 'if0_36007209_pedidos_db';
+$username = 'if0_36007209';
+$password = 'KEYZxkMa9uV4C';
 
 try {
     $conn = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
